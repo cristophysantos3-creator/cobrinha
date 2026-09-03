@@ -166,12 +166,16 @@
 
         let mouseX = canvas.width / 2;
         let mouseY = canvas.height / 2;
-        let lastInputMethod = 'mouse';
+        let controlMode = 'mouse'; // 'mouse' ou 'keyboard'
+
+        // Muda para o controle do mouse se o jogador clicar na tela
+        window.addEventListener('mousedown', () => {
+            controlMode = 'mouse';
+        });
 
         window.addEventListener('mousemove', (e) => {
             mouseX = e.clientX;
             mouseY = e.clientY;
-            lastInputMethod = 'mouse';
         });
 
         const keys = {
@@ -184,7 +188,7 @@
         window.addEventListener('keydown', (e) => {
             if (e.key in keys) {
                 keys[e.key] = true;
-                lastInputMethod = 'keyboard';
+                controlMode = 'keyboard'; // Desativa o mouse instantaneamente ao pressionar uma seta
             }
         });
 
@@ -242,7 +246,8 @@
                 if (this.dead) return;
 
                 if (!this.isBot) {
-                    if (lastInputMethod === 'keyboard' && (keys.ArrowUp || keys.ArrowDown || keys.ArrowLeft || keys.ArrowRight)) {
+                    if (controlMode === 'keyboard') {
+                        // Movimentação exclusiva pelo teclado
                         let dx = 0;
                         let dy = 0;
 
@@ -261,6 +266,7 @@
                             this.angle += diff * this.turnSpeed;
                         }
                     } else {
+                        // Movimentação pelo mouse
                         this.angle = Math.atan2(mouseY - canvas.height / 2, mouseX - canvas.width / 2);
                     }
                 } else {
