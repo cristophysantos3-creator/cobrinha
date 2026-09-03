@@ -37,7 +37,6 @@
             display: none;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
-        /* Placar fixado no canto inferior direito com tamanho compacto */
         #leaderboard {
             position: absolute;
             bottom: 20px;
@@ -83,52 +82,63 @@
         }
         .card {
             background: #181b29;
-            padding: 30px;
+            padding: 25px 30px;
             border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             text-align: center;
-            max-width: 400px;
+            max-width: 420px;
             width: 90%;
             box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
         .card h1 {
             color: #00f2fe;
-            margin-bottom: 8px;
-            font-size: 28px;
+            margin-bottom: 4px;
+            font-size: 26px;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
         .card p {
             color: #a0aec0;
-            font-size: 14px;
-            margin-bottom: 20px;
+            font-size: 13px;
+            margin-bottom: 16px;
         }
-        .name-input {
+        .form-group {
+            margin-bottom: 14px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            color: #e2e8f0;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .name-input, .select-input {
             width: 100%;
-            padding: 12px;
+            padding: 10px 12px;
             border-radius: 8px;
             border: 1px solid rgba(255, 255, 255, 0.2);
             background: #0d0e15;
             color: #fff;
-            font-size: 16px;
-            margin-bottom: 20px;
-            text-align: center;
+            font-size: 14px;
             outline: none;
         }
-        .name-input:focus {
+        .name-input:focus, .select-input:focus {
             border-color: #00f2fe;
         }
         .color-options {
             display: flex;
             justify-content: center;
-            gap: 12px;
-            margin-bottom: 24px;
+            gap: 10px;
+            margin-top: 6px;
         }
         .color-btn {
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            border: 3px solid transparent;
+            border: 2px solid transparent;
             cursor: pointer;
             transition: transform 0.2s, border-color 0.2s;
         }
@@ -143,12 +153,13 @@
             background: linear-gradient(135deg, #00c6ff, #0072ff);
             color: #fff;
             border: none;
-            padding: 14px 28px;
-            font-size: 16px;
+            padding: 12px 28px;
+            font-size: 15px;
             font-weight: bold;
             border-radius: 30px;
             cursor: pointer;
             width: 100%;
+            margin-top: 10px;
             transition: opacity 0.2s, transform 0.2s;
         }
         .start-btn:hover {
@@ -161,19 +172,47 @@
 
     <div id="hud">Bolinhas Comidas: <span id="score">0</span></div>
 
-    <!-- Leaderboard posicionado no canto inferior direito -->
     <div id="leaderboard">
         <h3>Top Cobrinhas</h3>
         <ol id="leaderList"></ol>
     </div>
 
-    <!-- Menu Principal -->
+    <!-- Menu Principal com Novas Configurações -->
     <div id="menuModal">
         <div class="card">
             <h1>Slither PRO</h1>
-            <p>Digite seu nome e escolha a cor:</p>
-            <input type="text" id="playerName" class="name-input" placeholder="Seu Nickname" maxlength="12" value="Jogador">
-            <div class="color-options" id="colorContainer"></div>
+            <p>Configure sua partida e comece a jogar:</p>
+            
+            <div class="form-group">
+                <label for="playerName">Seu Nickname</label>
+                <input type="text" id="playerName" class="name-input" placeholder="Digite seu nome" maxlength="12" value="Jogador">
+            </div>
+
+            <div class="form-group">
+                <label for="botCount">Quantidade de Bots</label>
+                <select id="botCount" class="select-input">
+                    <option value="5">5 Bots</option>
+                    <option value="12" selected>12 Bots</option>
+                    <option value="20">20 Bots</option>
+                    <option value="35">35 Bots (Caos)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="difficulty">Dificuldade dos Bots</label>
+                <select id="difficulty" class="select-input">
+                    <option value="easy">Fácil (Lentos e Inofensivos)</option>
+                    <option value="medium" selected>Médio (Normal)</option>
+                    <option value="hard">Difícil (Rápidos e Atentos)</option>
+                    <option value="insane">Hard (Agressivos e Implacáveis)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Sua Cor</label>
+                <div class="color-options" id="colorContainer"></div>
+            </div>
+
             <button class="start-btn" onclick="startGame()">JOGAR AGORA</button>
         </div>
     </div>
@@ -189,6 +228,8 @@
         const leaderList = document.getElementById('leaderList');
         const menuModal = document.getElementById('menuModal');
         const nameInput = document.getElementById('playerName');
+        const botCountInput = document.getElementById('botCount');
+        const difficultyInput = document.getElementById('difficulty');
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -205,10 +246,18 @@
             { head: '#e60000', body: '#800000' }
         ];
 
-        const BOT_NAMES = ['Alpha', 'Viper', 'Shadow', 'Slayer', 'Phantom', 'Python', 'Titan', 'Apex', 'Storm', 'Blaze', 'Ghost', 'Cobalt'];
+        const BOT_NAMES = ['Alpha', 'Viper', 'Shadow', 'Slayer', 'Phantom', 'Python', 'Titan', 'Apex', 'Storm', 'Blaze', 'Ghost', 'Cobalt', 'Raptor', 'Omega', 'Hydra', 'Kraken', 'Ares', 'Zeus', 'Venom', 'Spectre', 'NEX', 'Kratos', 'Aura', 'Nova', 'Pulse', 'Cyber', 'Vortex', 'Saber', 'Fury', 'Havoc', 'Rogue', 'Hunter', 'Draco', 'Reaper', 'Mamba'];
+
+        const DIFFICULTY_SETTINGS = {
+            easy: { speed: 2.5, turnRate: 0.05, visionRadius: 80 },
+            medium: { speed: 3.5, turnRate: 0.1, visionRadius: 160 },
+            hard: { speed: 4.2, turnRate: 0.2, visionRadius: 260 },
+            insane: { speed: 5.0, turnRate: 0.35, visionRadius: 380 }
+        };
 
         let selectedColorIndex = 0;
         let isGameRunning = false;
+        let currentDifficulty = 'medium';
 
         const colorContainer = document.getElementById('colorContainer');
         COLORS.forEach((col, index) => {
@@ -227,17 +276,13 @@
         let mouseY = canvas.height / 2;
         let controlMode = 'mouse';
 
-        window.addEventListener('mousedown', () => {
-            controlMode = 'mouse';
-        });
-
+        window.addEventListener('mousedown', () => { controlMode = 'mouse'; });
         window.addEventListener('mousemove', (e) => {
             mouseX = e.clientX;
             mouseY = e.clientY;
         });
 
         const keys = {};
-
         window.addEventListener('keydown', (e) => {
             const key = e.key.toLowerCase();
             if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(key)) {
@@ -287,7 +332,10 @@
                 this.x = (Math.random() - 0.5) * 4000;
                 this.y = (Math.random() - 0.5) * 4000;
                 this.radius = 12;
-                this.speed = 3.5;
+                
+                const settings = DIFFICULTY_SETTINGS[currentDifficulty];
+                this.speed = this.isBot ? settings.speed : 3.8;
+                
                 this.angle = Math.random() * Math.PI * 2;
                 this.body = [];
                 this.length = 25;
@@ -299,14 +347,12 @@
                 }
             }
 
-            update() {
+            update(allSnakes) {
                 if (this.dead) return;
 
                 if (!this.isBot) {
                     if (controlMode === 'keyboard') {
-                        let dx = 0;
-                        let dy = 0;
-
+                        let dx = 0, dy = 0;
                         if (keys['arrowup'] || keys['w']) dy -= 1;
                         if (keys['arrowdown'] || keys['s']) dy += 1;
                         if (keys['arrowleft'] || keys['a']) dx -= 1;
@@ -319,8 +365,27 @@
                         this.angle = Math.atan2(mouseY - canvas.height / 2, mouseX - canvas.width / 2);
                     }
                 } else {
-                    if (Math.random() < 0.02) {
-                        this.angle += (Math.random() - 0.5) * 1.5;
+                    // IA do Bot ajustada pela dificuldade
+                    const settings = DIFFICULTY_SETTINGS[currentDifficulty];
+                    let avoidAngle = null;
+
+                    // Desviar de outras cobras
+                    for (let other of allSnakes) {
+                        if (other === this || other.dead) continue;
+                        for (let seg of other.body) {
+                            const dist = Math.hypot(this.x - seg.x, this.y - seg.y);
+                            if (dist < settings.visionRadius) {
+                                avoidAngle = Math.atan2(this.y - seg.y, this.x - seg.x);
+                                break;
+                            }
+                        }
+                        if (avoidAngle !== null) break;
+                    }
+
+                    if (avoidAngle !== null) {
+                        this.angle += (avoidAngle - this.angle) * settings.turnRate;
+                    } else if (Math.random() < 0.03) {
+                        this.angle += (Math.random() - 0.5) * 1.2;
                     }
                 }
 
@@ -346,7 +411,6 @@
                     ctx.closePath();
                 }
 
-                // Nome menor e mais discreto sobre a cabeça
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
                 ctx.font = '600 11px Segoe UI';
                 ctx.textAlign = 'center';
@@ -385,6 +449,9 @@
         let foods = [];
 
         function startGame() {
+            currentDifficulty = difficultyInput.value;
+            const botQuantity = parseInt(botCountInput.value, 10);
+
             menuModal.style.display = 'none';
             hud.style.display = 'block';
             leaderboard.style.display = 'block';
@@ -394,8 +461,14 @@
             player = new Snake(name, false, COLORS[selectedColorIndex]);
             scoreElement.innerText = player.eatenCount;
 
-            bots = BOT_NAMES.map(botName => new Snake(botName, true, COLORS[Math.floor(Math.random() * COLORS.length)]));
-            foods = Array.from({ length: 350 }, () => new Food());
+            // Criar a quantidade selecionada de bots
+            bots = [];
+            for (let i = 0; i < botQuantity; i++) {
+                const bName = BOT_NAMES[i % BOT_NAMES.length] + (i >= BOT_NAMES.length ? `_${i}` : '');
+                bots.push(new Snake(bName, true, COLORS[Math.floor(Math.random() * COLORS.length)]));
+            }
+
+            foods = Array.from({ length: 350 + botQuantity * 10 }, () => new Food());
 
             isGameRunning = true;
         }
@@ -452,6 +525,8 @@
 
                 drawGrid(cameraX, cameraY);
 
+                const allSnakes = [player, ...bots];
+
                 foods.forEach((food, index) => {
                     food.draw(cameraX, cameraY);
 
@@ -475,14 +550,12 @@
                     });
                 });
 
-                const allSnakes = [player, ...bots];
-
                 bots.forEach(bot => {
-                    bot.update();
+                    bot.update(allSnakes);
                     bot.draw(cameraX, cameraY);
                 });
 
-                player.update();
+                player.update(allSnakes);
                 player.draw(cameraX, cameraY);
 
                 allSnakes.forEach(snakeA => {
