@@ -37,7 +37,6 @@
             display: none;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
-        /* Menu do Jogo */
         #menuModal {
             position: absolute;
             top: 0;
@@ -115,7 +114,6 @@
 
     <div id="hud">Pontuação: <span id="score">0</span></div>
 
-    <!-- Menu Principal -->
     <div id="menuModal">
         <div class="card">
             <h1>Slither PRO</h1>
@@ -141,20 +139,18 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        // Configuração de Cores Disponíveis
         const COLORS = [
-            { head: '#00ff88', body: '#00b359' }, // Verde
-            { head: '#00d2ff', body: '#0072ff' }, // Azul
-            { head: '#ff007f', body: '#99004d' }, // Rosa/Roxo
-            { head: '#ff9900', body: '#cc6600' }, // Laranja
-            { head: '#e60000', body: '#800000' }  // Vermelho
+            { head: '#00ff88', body: '#00b359' },
+            { head: '#00d2ff', body: '#0072ff' },
+            { head: '#ff007f', body: '#99004d' },
+            { head: '#ff9900', body: '#cc6600' },
+            { head: '#e60000', body: '#800000' }
         ];
 
         let selectedColorIndex = 0;
         let isGameRunning = false;
         let score = 0;
 
-        // Renderiza seletores de cor no menu
         const colorContainer = document.getElementById('colorContainer');
         COLORS.forEach((col, index) => {
             const btn = document.createElement('div');
@@ -170,7 +166,7 @@
 
         let mouseX = canvas.width / 2;
         let mouseY = canvas.height / 2;
-        let lastInputMethod = 'mouse'; // Guarda se o último comando foi teclado ou mouse
+        let lastInputMethod = 'mouse';
 
         window.addEventListener('mousemove', (e) => {
             mouseX = e.clientX;
@@ -178,7 +174,6 @@
             lastInputMethod = 'mouse';
         });
 
-        // Mapeamento de teclas pressionadas
         const keys = {
             ArrowUp: false,
             ArrowDown: false,
@@ -187,19 +182,18 @@
         };
 
         window.addEventListener('keydown', (e) => {
-            if (keys.hasOwnProperty(e.key)) {
+            if (e.key in keys) {
                 keys[e.key] = true;
                 lastInputMethod = 'keyboard';
             }
         });
 
         window.addEventListener('keyup', (e) => {
-            if (keys.hasOwnProperty(e.key)) {
+            if (e.key in keys) {
                 keys[e.key] = false;
             }
         });
 
-        // Comida
         class Food {
             constructor(x, y, value = 1) {
                 this.x = x !== undefined ? x : (Math.random() - 0.5) * 6000;
@@ -221,7 +215,6 @@
             }
         }
 
-        // Classe genérica de Cobra (para Jogador e Bots)
         class Snake {
             constructor(isBot = false, colors = COLORS[0]) {
                 this.isBot = isBot;
@@ -234,7 +227,7 @@
                 this.y = (Math.random() - 0.5) * 4000;
                 this.radius = 12;
                 this.speed = 3.5;
-                this.turnSpeed = 0.08; // Velocidade de rotação no teclado
+                this.turnSpeed = 0.12;
                 this.angle = Math.random() * Math.PI * 2;
                 this.body = [];
                 this.length = 25;
@@ -250,7 +243,6 @@
 
                 if (!this.isBot) {
                     if (lastInputMethod === 'keyboard' && (keys.ArrowUp || keys.ArrowDown || keys.ArrowLeft || keys.ArrowRight)) {
-                        // Cálculo do ângulo com base nas setas pressionadas
                         let dx = 0;
                         let dy = 0;
 
@@ -263,18 +255,15 @@
                             const targetAngle = Math.atan2(dy, dx);
                             let diff = targetAngle - this.angle;
 
-                            // Normaliza a diferença de ângulo para o menor caminho
                             while (diff < -Math.PI) diff += Math.PI * 2;
                             while (diff > Math.PI) diff -= Math.PI * 2;
 
                             this.angle += diff * this.turnSpeed;
                         }
                     } else {
-                        // Controle padrão pelo mouse
                         this.angle = Math.atan2(mouseY - canvas.height / 2, mouseX - canvas.width / 2);
                     }
                 } else {
-                    // Inteligência artificial simples dos Bots
                     if (Math.random() < 0.02) {
                         this.angle += (Math.random() - 0.5) * 1.5;
                     }
@@ -310,7 +299,6 @@
 
             die() {
                 this.dead = true;
-                // Transforma o corpo da cobra em bolinhas de comida
                 for (let i = 0; i < this.body.length; i += 2) {
                     foods.push(new Food(
                         this.body[i].x + (Math.random() - 0.5) * 20,
@@ -387,11 +375,9 @@
 
                 drawGrid(cameraX, cameraY);
 
-                // Comidas
                 foods.forEach((food, index) => {
                     food.draw(cameraX, cameraY);
 
-                    // Colisão Comida x Player
                     const distP = Math.hypot(player.x - food.x, player.y - food.y);
                     if (distP < player.radius + food.radius) {
                         player.grow(food.value);
@@ -401,7 +387,6 @@
                         foods.push(new Food());
                     }
 
-                    // Colisão Comida x Bots
                     bots.forEach(bot => {
                         if (!bot.dead) {
                             const distB = Math.hypot(bot.x - food.x, bot.y - food.y);
@@ -414,7 +399,6 @@
                     });
                 });
 
-                // Atualiza e desenha Bots
                 const allSnakes = [player, ...bots];
 
                 bots.forEach(bot => {
@@ -425,14 +409,12 @@
                 player.update();
                 player.draw(cameraX, cameraY);
 
-                // Sistema de Colisão Cobra x Cobra
                 allSnakes.forEach(snakeA => {
                     if (snakeA.dead) return;
 
                     allSnakes.forEach(snakeB => {
                         if (snakeA === snakeB || snakeB.dead) return;
 
-                        // Verifica a cabeça da snakeA contra cada segmento do corpo da snakeB
                         for (let i = 5; i < snakeB.body.length; i++) {
                             const seg = snakeB.body[i];
                             const dist = Math.hypot(snakeA.x - seg.x, snakeA.y - seg.y);
