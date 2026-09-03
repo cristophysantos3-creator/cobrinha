@@ -37,6 +37,37 @@
             display: none;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
+        #leaderboard {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #fff;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            padding: 16px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+            display: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            min-width: 220px;
+        }
+        #leaderboard h3 {
+            color: #00f2fe;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        #leaderboard ol {
+            padding-left: 20px;
+            font-size: 14px;
+        }
+        #leaderboard li {
+            margin-bottom: 6px;
+            color: #e2e8f0;
+        }
         #menuModal {
             position: absolute;
             top: 0;
@@ -69,7 +100,22 @@
         .card p {
             color: #a0aec0;
             font-size: 14px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
+        }
+        .name-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: #0d0e15;
+            color: #fff;
+            font-size: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+            outline: none;
+        }
+        .name-input:focus {
+            border-color: #00f2fe;
         }
         .color-options {
             display: flex;
@@ -112,12 +158,20 @@
 </head>
 <body>
 
-    <div id="hud">Pontuação: <span id="score">0</span></div>
+    <div id="hud">Bolinhas Comidas: <span id="score">0</span></div>
 
+    <!-- Leaderboard das Maiores Cobrinhas -->
+    <div id="leaderboard">
+        <h3>Top Cobrinhas</h3>
+        <ol id="leaderList"></ol>
+    </div>
+
+    <!-- Menu Principal -->
     <div id="menuModal">
         <div class="card">
             <h1>Slither PRO</h1>
-            <p>Escolha a cor da sua cobra e entre no jogo:</p>
+            <p>Digite seu nome e escolha a cor:</p>
+            <input type="text" id="playerName" class="name-input" placeholder="Seu Nickname" maxlength="12" value="Jogador">
             <div class="color-options" id="colorContainer"></div>
             <button class="start-btn" onclick="startGame()">JOGAR AGORA</button>
         </div>
@@ -130,7 +184,10 @@
         const ctx = canvas.getContext('2d');
         const hud = document.getElementById('hud');
         const scoreElement = document.getElementById('score');
+        const leaderboard = document.getElementById('leaderboard');
+        const leaderList = document.getElementById('leaderList');
         const menuModal = document.getElementById('menuModal');
+        const nameInput = document.getElementById('playerName');
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -147,9 +204,10 @@
             { head: '#e60000', body: '#800000' }
         ];
 
+        const BOT_NAMES = ['Alpha', 'Viper', 'Shadow', 'Slayer', 'Phantom', 'Python', 'Titan', 'Apex', 'Storm', 'Blaze', 'Ghost', 'Cobalt'];
+
         let selectedColorIndex = 0;
         let isGameRunning = false;
-        let score = 0;
 
         const colorContainer = document.getElementById('colorContainer');
         COLORS.forEach((col, index) => {
@@ -182,7 +240,7 @@
         window.addEventListener('keydown', (e) => {
             const key = e.key.toLowerCase();
             if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(key)) {
-                e.preventDefault(); // Impede a página de rolar
+                e.preventDefault();
                 keys[key] = true;
                 controlMode = 'keyboard';
             }
@@ -217,7 +275,8 @@
         }
 
         class Snake {
-            constructor(isBot = false, colors = COLORS[0]) {
+            constructor(name, isBot = false, colors = COLORS[0]) {
+                this.name = name;
                 this.isBot = isBot;
                 this.colors = colors;
                 this.reset();
@@ -231,6 +290,7 @@
                 this.angle = Math.random() * Math.PI * 2;
                 this.body = [];
                 this.length = 25;
+                this.eatenCount = 0; // Quantidade de bolinhas comidas
                 this.dead = false;
 
                 for (let i = 0; i < this.length; i++) {
@@ -276,6 +336,7 @@
             draw(cameraX, cameraY) {
                 if (this.dead) return;
 
+                // Desenha o corpo da cobra
                 for (let i = this.body.length - 1; i >= 0; i--) {
                     const segment = this.body[i];
                     ctx.beginPath();
@@ -284,10 +345,17 @@
                     ctx.fill();
                     ctx.closePath();
                 }
+
+                // Desenha o nome sobre a cabeça da cobra
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 14px Segoe UI';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.name, this.x - cameraX, this.y - cameraY - this.radius - 8);
             }
 
-            grow(amount = 3) {
-                this.length += amount;
+            grow(amount = 1) {
+                this.eatenCount += amount;
+                this.length += amount * 3;
                 this.radius = Math.min(12 + Math.floor(this.length / 80), 26);
             }
 
@@ -319,12 +387,14 @@
         function startGame() {
             menuModal.style.display = 'none';
             hud.style.display = 'block';
+            leaderboard.style.display = 'block';
 
-            score = 0;
-            scoreElement.innerText = score;
+            const name = nameInput.value.trim() || 'Jogador';
 
-            player = new Snake(false, COLORS[selectedColorIndex]);
-            bots = Array.from({ length: 12 }, () => new Snake(true, COLORS[Math.floor(Math.random() * COLORS.length)]));
+            player = new Snake(name, false, COLORS[selectedColorIndex]);
+            scoreElement.innerText = player.eatenCount;
+
+            bots = BOT_NAMES.map(botName => new Snake(botName, true, COLORS[Math.floor(Math.random() * COLORS.length)]));
             foods = Array.from({ length: 350 }, () => new Food());
 
             isGameRunning = true;
@@ -333,8 +403,22 @@
         function gameOver() {
             isGameRunning = false;
             hud.style.display = 'none';
+            leaderboard.style.display = 'none';
             menuModal.style.display = 'flex';
-            alert(`Fim de jogo! Sua pontuação final foi: ${score}`);
+            alert(`Fim de jogo! ${player.name}, você comeu ${player.eatenCount} bolinhas!`);
+        }
+
+        function updateLeaderboard(allSnakes) {
+            // Ordena as cobras pela quantidade de bolinhas comidas
+            const sorted = [...allSnakes].sort((a, b) => b.eatenCount - a.eatenCount).slice(0, 5);
+
+            leaderList.innerHTML = '';
+            sorted.forEach(snake => {
+                const li = document.createElement('li');
+                li.innerText = `${snake.name}: ${snake.eatenCount} bolinhas`;
+                if (snake === player) li.style.color = '#00f2fe'; // Destaque para o jogador
+                leaderList.appendChild(li);
+            });
         }
 
         function drawGrid(cameraX, cameraY) {
@@ -375,8 +459,7 @@
                     const distP = Math.hypot(player.x - food.x, player.y - food.y);
                     if (distP < player.radius + food.radius) {
                         player.grow(food.value);
-                        score += food.value * 10;
-                        scoreElement.innerText = score;
+                        scoreElement.innerText = player.eatenCount;
                         foods.splice(index, 1);
                         foods.push(new Food());
                     }
@@ -403,6 +486,7 @@
                 player.update();
                 player.draw(cameraX, cameraY);
 
+                // Colisão entre cobras
                 allSnakes.forEach(snakeA => {
                     if (snakeA.dead) return;
 
@@ -420,6 +504,9 @@
                         }
                     });
                 });
+
+                // Atualiza o Placar Top 5
+                updateLeaderboard(allSnakes);
             }
 
             requestAnimationFrame(gameLoop);
